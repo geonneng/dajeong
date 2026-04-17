@@ -608,6 +608,37 @@
     }
     .slide-up { animation: slideUp 0.4s cubic-bezier(.25,.8,.25,1) forwards; }
 
+    /* ─── 전체화면 버튼 ─── */
+    #fullscreen-btn {
+      position: fixed;
+      top: clamp(10px, 2vh, 20px);
+      right: clamp(10px, 2vw, 24px);
+      z-index: 999;
+      width: clamp(36px, 4vw, 48px);
+      height: clamp(36px, 4vw, 48px);
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, transform 0.15s;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    #fullscreen-btn:hover  { background: rgba(0,0,0,0.65); transform: scale(1.08); }
+    #fullscreen-btn:active { transform: scale(0.94); }
+    #fullscreen-btn svg {
+      width: 55%;
+      height: 55%;
+      fill: none;
+      stroke: rgba(255,255,255,0.85);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     /* ─── Screen transition ─── */
     @keyframes screenFadeIn {
       from { opacity: 0; }
@@ -621,6 +652,24 @@
 <!-- ══════════════════════════════════════════════════════════
      SCREEN 1 : SPLASH  (로고 이미지 전체화면, 클릭/터치로 이동)
 ══════════════════════════════════════════════════════════ -->
+<!-- 전체화면 버튼 (모든 화면 위에 고정) -->
+<button id="fullscreen-btn" onclick="toggleFullscreen()" title="전체화면">
+  <!-- 전체화면 진입 아이콘 -->
+  <svg id="fs-icon-enter" viewBox="0 0 24 24">
+    <polyline points="15 3 21 3 21 9"/>
+    <polyline points="9 21 3 21 3 15"/>
+    <line x1="21" y1="3" x2="14" y2="10"/>
+    <line x1="3" y1="21" x2="10" y2="14"/>
+  </svg>
+  <!-- 전체화면 해제 아이콘 -->
+  <svg id="fs-icon-exit" viewBox="0 0 24 24" style="display:none">
+    <polyline points="4 14 10 14 10 20"/>
+    <polyline points="20 10 14 10 14 4"/>
+    <line x1="10" y1="14" x2="3" y2="21"/>
+    <line x1="21" y1="3" x2="14" y2="10"/>
+  </svg>
+</button>
+
 <div id="screen-splash" class="screen active" onclick="goToGender()">
 
   <!-- 레이어 1: logo_bg.png — cover로 화면 꽉 채움 (모니터 크기에 따라 보이는 영역 달라짐) -->
@@ -1151,6 +1200,23 @@ function snapCharToPanel() {
 window.addEventListener('resize', snapCharToPanel);
 
 // ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// 전체화면
+// ─────────────────────────────────────────────────
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const isFs = !!document.fullscreenElement;
+  document.getElementById('fs-icon-enter').style.display = isFs ? 'none'  : '';
+  document.getElementById('fs-icon-exit').style.display  = isFs ? ''      : 'none';
+});
+
 // 키보드 (스페이스·엔터 → 대화 진행)
 // ─────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
