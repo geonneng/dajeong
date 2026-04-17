@@ -1,741 +1,1170 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>보건쌤의 이별 예절 클리닉 💊</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>라스트 에티켓 (Last Etiquette)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap"
-    rel="stylesheet"
-  />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Noto Sans KR', sans-serif; }
-    html, body { min-height: 100vh; }
-    body {
-      background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 40%, #ede9fe 80%, #e0e7ff 100%);
-      background-attachment: fixed;
-    }
-
-    .hidden { display: none !important; }
-
-    /* ── 공통 애니메이션 ── */
-    @keyframes bounceIn {
-      0%   { transform: scale(0.3); opacity: 0; }
-      50%  { transform: scale(1.08); opacity: 1; }
-      70%  { transform: scale(0.96); }
-      100% { transform: scale(1); }
-    }
-    @keyframes slideUp {
-      from { transform: translateY(24px); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      20%,60% { transform: translateX(-5px); }
-      40%,80% { transform: translateX(5px); }
-    }
-    @keyframes floatBadge {
-      0%,100% { transform: translateY(0); }
-      50%      { transform: translateY(-6px); }
-    }
-
-    .bounce-in  { animation: bounceIn 0.7s ease-out both; }
-    .slide-up   { animation: slideUp  0.5s ease-out both; }
-    .fade-in    { animation: fadeIn   0.4s ease-out both; }
-    .shake      { animation: shake    0.4s ease-out; }
-    .float      { animation: floatBadge 3s ease-in-out infinite; }
-
-    /* ── 점수 원 ── */
-    .score-ring {
-      stroke-dasharray: 339.29;
-      stroke-dashoffset: 339.29;
-      transition: stroke-dashoffset 2.2s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    /* ── 진행 바 ── */
-    .prog-bar {
-      width: 0%;
-      transition: width 1.3s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    /* ── 처방전 카드 ── */
-    .rx-card {
-      background: #fffef5;
-      border: 2px dashed #d4a843;
-      position: relative;
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
       overflow: hidden;
-    }
-    .rx-card::after {
-      content: 'Rx';
-      position: absolute;
-      font-size: 130px;
-      font-weight: 900;
-      font-style: italic;
-      color: rgba(212, 168, 67, 0.07);
-      bottom: -24px;
-      right: -8px;
-      line-height: 1;
-      pointer-events: none;
+      font-family: 'Nanum Gothic', sans-serif;
+      background: #0d0d1a;
       user-select: none;
     }
 
-    /* ── 텍스트에어리어 ── */
-    #msgInput {
+    /* ─── Screen System ─── */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: none;
+    }
+    .screen.active { display: block; }
+
+    /* ─── Background Layer ─── */
+    .bg-layer {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    /* ─── Vignette ─── */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ════════════════════════════════
+       SCREEN 1 : SPLASH
+    ════════════════════════════════ */
+    #screen-splash {
+      cursor: pointer;
+    }
+
+    /* logo_bg.png — 화면을 꽉 채우되 모니터 비율에 따라 보이는 영역이 달라짐 (cover) */
+    #splash-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('/logo/logo_bg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #0d0d1a; /* 이미지 없을 때 폴백 색 */
+      z-index: 0;
+    }
+
+    /* logo.png — 중앙 배치, 뷰포트 크기에 비례해 반응형 */
+    #splash-logo-wrap {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    #splash-logo {
+      /* 가로/세로 중 화면에 꽉 차는 쪽 기준으로 맞춤 */
+      width: min(92vw, 92vh * 1.78);
+      height: min(92vh, 92vw / 1.78);
+      max-width: 1100px;
+      max-height: 92vh;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 32px rgba(0,0,0,0.6));
+      display: block;
+    }
+    /* 세로(portrait) 스마트폰: 너비 우선 최대치 */
+    @media (orientation: portrait) {
+      #splash-logo {
+        width: 92vw;
+        height: auto;
+        max-height: 88vh;
+      }
+    }
+    /* 가로(landscape) 태블릿·모니터: 높이 우선 최대치 */
+    @media (orientation: landscape) {
+      #splash-logo {
+        height: 88vh;
+        width: auto;
+        max-width: 1100px;
+      }
+    }
+
+    /* logo.png 로드 실패 시 텍스트 폴백 */
+    #splash-fallback {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      gap: 0.6em;
+      pointer-events: none;
+    }
+    #splash-fallback .f-title {
+      font-size: clamp(36px, 6vw, 80px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      text-shadow: 0 2px 24px rgba(0,0,0,0.8);
+    }
+    #splash-fallback .f-sub {
+      font-size: clamp(14px, 2vw, 24px);
+      opacity: 0.7;
+      letter-spacing: 3px;
+    }
+
+    /* "터치하여 시작" 힌트 */
+    #splash-hint {
+      position: absolute;
+      bottom: clamp(20px, 5vh, 60px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      color: rgba(255,255,255,0.65);
+      font-size: clamp(12px, 1.5vw, 18px);
+      letter-spacing: 2px;
+      animation: pulse-hint 2s ease infinite;
+      white-space: nowrap;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+    }
+    @keyframes pulse-hint {
+      0%,100% { opacity: 0.65; transform: translateX(-50%) translateY(0); }
+      50%      { opacity: 1;    transform: translateX(-50%) translateY(-5px); }
+    }
+
+    /* ════════════════════════════════
+       SCREEN 2 : GENDER SELECTION
+    ════════════════════════════════ */
+    #gender-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      align-items: stretch;
+      /* 좌: 성별 선택 / 우: 팁 카드 */
+    }
+
+    /* ─ 좌측 패널: 성별 선택 ─ */
+    #gender-left {
+      flex: 1 1 45%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(16px, 3.5vh, 40px);
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      padding: clamp(20px, 4vw, 60px);
+    }
+
+    .gender-ask {
+      color: #fff;
+      font-size: clamp(16px, 2.4vw, 28px);
+      font-weight: 800;
+      text-align: center;
+      text-shadow: 0 1px 10px rgba(0,0,0,0.9);
+      line-height: 1.5;
+      word-break: keep-all;
+    }
+    .gender-sub {
+      color: rgba(255,255,255,0.65);
+      font-size: clamp(12px, 1.4vw, 16px);
+      text-align: center;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+      line-height: 1.6;
+      word-break: keep-all;
+      max-width: 300px;
+    }
+
+    .gender-btns {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(12px, 2vh, 20px);
+      width: 100%;
+      max-width: 280px;
+    }
+    .gender-btn {
+      font-family: 'Nanum Gothic', sans-serif;
+      font-weight: 800;
+      font-size: clamp(15px, 2.2vw, 24px);
+      padding: 0.7em 1.5em;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+      width: 100%;
+    }
+    .gender-btn:hover  { transform: scale(1.05); filter: brightness(1.1); }
+    .gender-btn:active { transform: scale(0.97); }
+    .btn-male   { background: #3b82f6; color: #fff; }
+    .btn-female { background: #ec4899; color: #fff; }
+
+    /* ─ 우측 패널: 팁 카드 ─ */
+    #gender-right {
+      flex: 1 1 55%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(20px, 4vw, 60px) clamp(20px, 4vw, 52px);
+      background: rgba(0,0,0,0.62);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      gap: clamp(10px, 2vh, 20px);
+      overflow-y: auto;
+    }
+
+    .tips-header {
+      color: #FFD700;
+      font-size: clamp(14px, 1.8vw, 20px);
+      font-weight: 800;
+      border-bottom: 1px solid rgba(255,215,0,0.3);
+      padding-bottom: 0.5em;
+      margin-bottom: 0.2em;
+    }
+
+    .tip-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75em;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.5vw, 18px);
+      border-left: 3px solid #FFD700;
+    }
+    .tip-num {
+      color: #FFD700;
+      font-size: clamp(18px, 2.2vw, 26px);
+      font-weight: 900;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 0.05em;
+    }
+    .tip-body {}
+    .tip-title {
+      color: #fff;
+      font-size: clamp(12px, 1.4vw, 16px);
+      font-weight: 800;
+      margin-bottom: 0.2em;
+    }
+    .tip-desc {
+      color: rgba(255,255,255,0.65);
+      font-size: clamp(11px, 1.2vw, 14px);
+      line-height: 1.5;
+      word-break: keep-all;
+    }
+
+    /* 모바일: 세로 배치 */
+    @media (max-width: 640px) {
+      #gender-overlay { flex-direction: column; }
+      #gender-left  { flex: 0 0 auto; padding: 24px 20px 16px; }
+      #gender-right { flex: 1 1 0; padding: 16px 20px 24px; }
+      .gender-btns  { flex-direction: row; max-width: 100%; }
+      .gender-btn   { font-size: 15px; padding: 0.6em 1em; }
+      #gender-right { overflow-y: auto; }
+    }
+
+    /* ════════════════════════════════
+       SCREEN 3 : GAME
+    ════════════════════════════════ */
+    #char-wrap {
+      position: absolute;
+      bottom: 0; /* JS에서 패널 높이에 맞게 실시간 조정 */
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 15;
+      text-align: center;
+      transition: bottom 0.3s ease;
+    }
+    #char-img {
+      height: clamp(300px, 78vh, 820px);
+      max-width: 95vw;
+      object-fit: contain;
+      object-position: bottom;
+      filter: drop-shadow(0 8px 28px rgba(0,0,0,0.55));
+      transition: opacity 0.35s ease, filter 0.35s ease;
+      display: block;
+    }
+    #char-img.shake { animation: shake 0.5s ease; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-8px)} 40%{transform:translateX(8px)}
+      60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
+    }
+
+    /* ─── Dialog Box ─── */
+    #dialog-box {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: var(--dialog-h, 26vh);
+      min-height: 150px;
+      max-height: 210px;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      padding: clamp(10px,2vh,22px) clamp(18px,4vw,56px);
+      cursor: pointer;
+    }
+
+    /* ─── Input Box ─── */
+    #input-box {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      z-index: 20;
+      display: none;
+      flex-direction: column;
+      gap: clamp(6px,1vh,14px);
+      padding: clamp(10px,2vh,20px) clamp(18px,4vw,56px);
+    }
+
+    /* ─── Name Tag ─── */
+    .name-tag {
+      display: inline-flex;
+      align-items: center;
+      background: #FFD700;
+      color: #1a1001;
+      font-weight: 800;
+      font-size: clamp(12px,1.7vw,19px);
+      padding: 0.22em 0.85em;
+      border-radius: 5px;
+      box-shadow: 2px 3px 10px rgba(0,0,0,0.45);
+      width: fit-content;
+      margin-bottom: clamp(5px,0.9vh,12px);
+      letter-spacing: 0.02em;
+    }
+
+    /* ─── Dialog Text ─── */
+    #dialog-text {
+      color: #fff;
+      font-size: clamp(14px,2vw,23px);
+      line-height: 1.68;
+      flex: 1;
+      word-break: keep-all;
+    }
+
+    /* ─── Click Hint ─── */
+    .click-hint {
+      color: rgba(255,255,255,0.45);
+      font-size: clamp(10px,1.1vw,14px);
+      text-align: right;
+      animation: blink-hint 1.6s ease infinite;
+    }
+    @keyframes blink-hint { 0%,100%{opacity:1} 50%{opacity:0.15} }
+
+    /* ─── Textarea ─── */
+    #msg-input {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.18);
+      border-radius: 10px;
+      color: #fff;
+      font-family: 'Nanum Gothic', sans-serif;
+      font-size: clamp(13px,1.65vw,19px);
+      line-height: 1.65;
+      padding: 0.65em 0.9em;
       resize: none;
-      transition: border-color 0.25s, box-shadow 0.25s;
-    }
-    #msgInput:focus {
       outline: none;
-      border-color: #ec4899;
-      box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+      height: clamp(90px,15vh,150px);
+      transition: border-color 0.2s;
+      user-select: text;
+    }
+    #msg-input::placeholder { color: rgba(255,255,255,0.32); }
+    #msg-input:focus { border-color: rgba(255,215,0,0.55); }
+
+    .input-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8em;
+      flex-wrap: wrap;
     }
 
-    /* ── 버튼 기본 트랜지션 ── */
-    .btn-primary {
-      transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+    #sentence-count {
+      color: rgba(255,255,255,0.45);
+      font-size: clamp(11px,1.2vw,14px);
+      transition: color 0.2s;
     }
-    .btn-primary:not(:disabled):hover  { transform: scale(1.02); box-shadow: 0 8px 24px rgba(236,72,153,0.35); }
-    .btn-primary:not(:disabled):active { transform: scale(0.98); }
-    .btn-primary:disabled { cursor: not-allowed; }
+    #sentence-count.ready { color: #86efac; }
 
-    /* ── 카드 진입 딜레이 ── */
-    .card-delay-1 { animation-delay: 0.1s; }
-    .card-delay-2 { animation-delay: 0.2s; }
-    .card-delay-3 { animation-delay: 0.3s; }
-    .card-delay-4 { animation-delay: 0.4s; }
-    .card-delay-5 { animation-delay: 0.5s; }
+    /* ─── Submit Button ─── */
+    #submit-btn {
+      font-family: 'Nanum Gothic', sans-serif;
+      font-weight: 800;
+      font-size: clamp(13px,1.5vw,17px);
+      background: #FFD700;
+      color: #1a1001;
+      padding: 0.55em 1.8em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      opacity: 0.32;
+      pointer-events: none;
+    }
+    #submit-btn.enabled { opacity: 1; pointer-events: all; }
+    #submit-btn.enabled:hover  { background: #ffc107; transform: scale(1.04); }
+    #submit-btn.enabled:active { transform: scale(0.97); }
+
+    /* ─── Typing Cursor ─── */
+    .typing-cur {
+      display: inline-block;
+      width: 2px;
+      height: 0.95em;
+      background: rgba(255,255,255,0.85);
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink-cur 0.75s step-end infinite;
+    }
+    @keyframes blink-cur { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ════════════════════════════════
+       SCREEN 4 : RESULT
+    ════════════════════════════════ */
+
+    /* 캐릭터 — 대화창 바로 위에 고정 (게임 화면과 동일 방식) */
+    #result-char-wrap {
+      position: absolute;
+      bottom: 0; /* snapResultChar()로 패널 높이만큼 올림 */
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 15;
+      transition: bottom 0.3s ease;
+    }
+    #result-char-img {
+      height: clamp(300px, 62vh, 820px);
+      max-width: 95vw;
+      object-fit: contain;
+      object-position: bottom;
+      filter: drop-shadow(0 8px 28px rgba(0,0,0,0.6));
+      display: block;
+    }
+
+    /* ─── 1단계: 캐릭터 대화창 (게임 dialog-box와 동일 스타일) ─── */
+    #result-dialog-box {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 26vh;
+      min-height: 150px;
+      max-height: 210px;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      padding: clamp(10px,2vh,22px) clamp(18px,4vw,56px);
+      cursor: pointer;
+    }
+    #result-dialog-text {
+      color: #fff;
+      font-size: clamp(14px,2vw,23px);
+      line-height: 1.68;
+      flex: 1;
+      word-break: keep-all;
+    }
+
+    /* ─── 2단계: 점수·피드백 패널 ─── */
+    #result-panel {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: max(36vh, 260px);
+      overflow-y: auto;
+      background: rgba(8,8,20,0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 20px 20px 0 0;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      z-index: 20;
+      display: none; /* 처음엔 숨김 */
+      flex-direction: column;
+      padding: clamp(8px,1.4vh,16px) clamp(14px,3vw,44px);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,215,0,0.4) transparent;
+    }
+    #result-panel.visible {
+      display: flex;
+      animation: slideUp 0.4s cubic-bezier(.25,.8,.25,1) forwards;
+    }
+    #result-panel::-webkit-scrollbar { width: 4px; }
+    #result-panel::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.4); border-radius: 2px; }
+
+    #score-row {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px,2vw,28px);
+      margin-bottom: clamp(6px,1vh,12px);
+      flex-wrap: wrap;
+    }
+    #result-score {
+      font-size: clamp(40px,6vw,72px);
+      font-weight: 900;
+      line-height: 1;
+      color: #FFD700;
+      text-shadow: 0 0 30px rgba(255,215,0,0.45);
+      transition: color 0.3s;
+    }
+    #result-grade     { font-size: clamp(15px,2vw,24px); font-weight:800; color:#fff; }
+    #result-grade-msg {
+      color: rgba(255,255,255,0.65);
+      font-size: clamp(10px,1.1vw,13px);
+      line-height: 1.45;
+      margin-top: 0.25em;
+      max-width: min(90vw,520px);
+      word-break: keep-all;
+    }
+
+    #feedback-list { margin-bottom: clamp(6px,1vh,12px); }
+    .feedback-item {
+      border-left: 3px solid;
+      padding: 0.45em 0.75em;
+      border-radius: 0 8px 8px 0;
+      background: rgba(255,255,255,0.04);
+      margin-bottom: 0.55em;
+    }
+    .fi-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.18em; }
+    .fi-label  { font-weight:700; font-size:clamp(12px,1.4vw,15px); }
+    .fi-score  { font-weight:700; font-size:clamp(12px,1.4vw,15px); }
+    .fi-text   { color:rgba(255,255,255,0.7); font-size:clamp(11px,1.2vw,13px); line-height:1.5; word-break:keep-all; }
+
+    .tips-box-result {
+      background: rgba(255,215,0,0.07);
+      border: 1px solid rgba(255,215,0,0.25);
+      border-radius: 12px;
+      padding: clamp(8px,1.2vh,14px) clamp(12px,1.8vw,20px);
+      margin-bottom: clamp(10px,1.5vh,18px);
+    }
+    .tips-title { color:#FFD700; font-weight:800; font-size:clamp(13px,1.5vw,17px); margin-bottom:0.5em; }
+    .tips-list  {
+      color:rgba(255,255,255,0.8);
+      font-size:clamp(11px,1.3vw,14px);
+      line-height:1.85;
+      padding-left:1.3em;
+      word-break:keep-all;
+    }
+
+    .retry-btn {
+      display: block;
+      margin: 0 auto;
+      font-family: 'Nanum Gothic', sans-serif;
+      font-weight: 800;
+      font-size: clamp(13px,1.6vw,18px);
+      background: #FFD700;
+      color: #1a1001;
+      padding: 0.62em 2.2em;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    }
+    .retry-btn:hover  { background: #ffc107; transform: scale(1.05); }
+    .retry-btn:active { transform: scale(0.96); }
+
+    /* ─── Loading Spinner ─── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 3px solid rgba(26,16,1,0.2);
+      border-top-color: #1a1001;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Animations ─── */
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(14px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.45s ease forwards; }
+
+    @keyframes slideUp {
+      from { transform:translateY(60px); opacity:0; }
+      to   { transform:translateY(0);    opacity:1; }
+    }
+    .slide-up { animation: slideUp 0.4s cubic-bezier(.25,.8,.25,1) forwards; }
+
+    /* ─── Screen transition ─── */
+    @keyframes screenFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .screen-enter { animation: screenFadeIn 0.4s ease forwards; }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════
-     SCREEN 1 · 인트로
-══════════════════════════════════════════════ -->
-<div id="screen-intro" class="min-h-screen flex items-center justify-center p-4 py-10">
-  <div class="max-w-xl w-full space-y-5">
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN 1 : SPLASH  (로고 이미지 전체화면, 클릭/터치로 이동)
+══════════════════════════════════════════════════════════ -->
+<div id="screen-splash" class="screen active" onclick="goToGender()">
 
-    <!-- 히어로 -->
-    <div class="text-center slide-up">
-      <div class="text-7xl mb-3 float inline-block">💊</div>
-      <div class="inline-flex items-center gap-2 bg-pink-100 text-pink-600 text-xs font-bold px-4 py-1.5 rounded-full mb-4 tracking-wide">
-        ✦ 에듀테크 보건교육 프로그램 ✦
-      </div>
-      <h1 class="text-4xl md:text-5xl font-black text-gray-800 leading-snug">
-        보건쌤의<br />
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">
-          이별 예절 클리닉
-        </span>
-      </h1>
-      <p class="text-gray-400 mt-2 text-base tracking-widest">Farewell Etiquette Clinic</p>
-    </div>
+  <!-- 레이어 1: logo_bg.png — cover로 화면 꽉 채움 (모니터 크기에 따라 보이는 영역 달라짐) -->
+  <div id="splash-bg"></div>
 
-    <!-- 소개 카드 -->
-    <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-6 slide-up card-delay-1">
-      <h2 class="font-bold text-gray-800 text-base mb-4 flex items-center gap-2">
-        <span class="text-xl">📋</span> 이런 프로그램이에요
-      </h2>
-      <ul class="space-y-3 text-sm text-gray-600">
-        <li class="flex items-start gap-3">
-          <span class="mt-0.5 text-pink-400 font-black">①</span>
-          이별 메시지를 작성하면 <strong class="text-gray-800">AI가 0~100점으로 예절 점수</strong>를 분석해줘요.
-        </li>
-        <li class="flex items-start gap-3">
-          <span class="mt-0.5 text-purple-400 font-black">②</span>
-          5가지 항목(인사, 비난 금지, 비밀 약속, 정성, 사과)을 종합 평가해요.
-        </li>
-        <li class="flex items-start gap-3">
-          <span class="mt-0.5 text-indigo-400 font-black">③</span>
-          90점 이상이면 <strong class="text-amber-600">👑 매너의 신</strong> 인증을 받을 수 있어요!
-        </li>
-      </ul>
-    </div>
-
-    <!-- 등급 미리보기 -->
-    <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-6 slide-up card-delay-2">
-      <h2 class="font-bold text-gray-800 text-base mb-4 flex items-center gap-2">
-        <span class="text-xl">🏅</span> 등급 시스템
-      </h2>
-      <div class="grid grid-cols-2 gap-2 text-sm">
-        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-center">
-          <div class="text-2xl">👑</div>
-          <p class="font-black text-amber-700 mt-1">매너의 신</p>
-          <p class="text-amber-500 text-xs">90~100점</p>
-        </div>
-        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-3 text-center">
-          <div class="text-2xl">👍</div>
-          <p class="font-black text-blue-700 mt-1">예절 우수생</p>
-          <p class="text-blue-500 text-xs">70~89점</p>
-        </div>
-        <div class="bg-green-50 border border-green-200 rounded-2xl p-3 text-center">
-          <div class="text-2xl">🌱</div>
-          <p class="font-black text-green-700 mt-1">매너 꿈나무</p>
-          <p class="text-green-500 text-xs">40~69점</p>
-        </div>
-        <div class="bg-red-50 border border-red-200 rounded-2xl p-3 text-center">
-          <div class="text-2xl">🚨</div>
-          <p class="font-black text-red-700 mt-1">재교육 필요</p>
-          <p class="text-red-500 text-xs">0~39점</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 주의사항 -->
-    <div class="bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 rounded-3xl p-5 slide-up card-delay-3">
-      <h2 class="font-bold text-gray-800 text-base mb-3 flex items-center gap-2">
-        <span class="text-xl">⚠️</span> 꼭 확인하세요!
-      </h2>
-      <div class="space-y-2 text-sm">
-        <div class="flex items-center gap-3 bg-white rounded-2xl p-3">
-          <span class="text-xl">🚫</span>
-          <p><strong class="text-red-600">욕설 포함 시 전체 0점</strong> 자동 처리</p>
-        </div>
-        <div class="flex items-center gap-3 bg-white rounded-2xl p-3">
-          <span class="text-xl">✍️</span>
-          <p><strong class="text-blue-600">최소 4문장 이상</strong> 작성해야 제출 가능</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 시작 버튼 -->
-    <button
-      onclick="showScreen('write')"
-      class="btn-primary w-full bg-gradient-to-r from-pink-500 to-violet-500 text-white font-black text-xl py-5 rounded-2xl shadow-lg slide-up card-delay-4"
-    >
-      진단 시작하기 →
-    </button>
+  <!-- 레이어 2: logo.png — 중앙, 뷰포트 비례 크기 -->
+  <div id="splash-logo-wrap">
+    <img id="splash-logo" src="/logo/logo.png" alt="라스트 에티켓"
+         onerror="this.style.display='none'; document.getElementById('splash-fallback').style.display='flex'">
   </div>
+
+  <!-- logo.png 로드 실패 시 텍스트 폴백 -->
+  <div id="splash-fallback">
+    <div class="f-title">💌 라스트 에티켓</div>
+    <div class="f-sub">LAST ETIQUETTE</div>
+  </div>
+
+  <!-- 하단 힌트 -->
+  <div id="splash-hint">▼ &nbsp;화면을 터치하여 시작&nbsp; ▼</div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN 2 : GENDER SELECTION  (성별 선택 + 이별 팁)
+══════════════════════════════════════════════════════════ -->
+<div id="screen-gender" class="screen">
+  <!-- 배경 -->
+  <div class="bg-layer"
+       style="background-image:url('/bg/bg_title.jpg'); background-color:#1a1030;"></div>
+  <div class="vignette"></div>
 
-<!-- ══════════════════════════════════════════════
-     SCREEN 2 · 메시지 작성
-══════════════════════════════════════════════ -->
-<div id="screen-write" class="hidden min-h-screen p-4 py-8">
-  <div class="max-w-3xl mx-auto space-y-4">
-
-    <!-- 상단 내비 -->
-    <div class="flex items-center gap-3">
-      <button
-        onclick="showScreen('intro')"
-        class="text-gray-400 hover:text-gray-600 text-sm transition-colors"
-      >← 뒤로</button>
-      <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-        <div class="bg-gradient-to-r from-pink-500 to-violet-500 h-full rounded-full" style="width:50%"></div>
-      </div>
-      <span class="text-xs text-gray-400 font-semibold">2 / 3 단계</span>
-    </div>
-
-    <!-- 타이틀 -->
-    <div class="text-center">
-      <h2 class="text-2xl font-black text-gray-800">📝 이별 메시지 작성하기</h2>
-      <p class="text-gray-400 text-sm mt-1">상대방에게 전하고 싶은 이별 인사를 적어보세요.</p>
-    </div>
-
-    <!-- 채점 힌트 -->
-    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md p-5">
-      <p class="font-bold text-gray-700 text-sm mb-3 flex items-center gap-1.5">
-        <span>✨</span> 점수 획득 포인트 (미리보기)
+  <div id="gender-overlay">
+    <!-- ── 좌측: 성별 선택 ── -->
+    <div id="gender-left">
+      <p class="gender-ask">나는 어느 쪽인가요?</p>
+      <p class="gender-sub">
+        선택한 성별에 따라 상대 캐릭터가 달라져요.<br>
+        이별 메시지를 직접 작성해보세요.
       </p>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-        <div class="flex items-center gap-3 bg-pink-50 rounded-xl p-3">
-          <span class="font-black text-pink-500 text-sm min-w-[32px] text-center">25점</span>
-          <div>
-            <p class="font-bold text-gray-700">💬 인사와 고마움</p>
-            <p class="text-gray-400">"고마워", "즐거웠어", "행복했어" 등</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 bg-purple-50 rounded-xl p-3">
-          <span class="font-black text-purple-500 text-sm min-w-[32px] text-center">25점</span>
-          <div>
-            <p class="font-bold text-gray-700">🚫 비난 금지</p>
-            <p class="text-gray-400">"너 때문" 같은 표현 쓰지 않기</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 bg-indigo-50 rounded-xl p-3">
-          <span class="font-black text-indigo-500 text-sm min-w-[32px] text-center">25점</span>
-          <div>
-            <p class="font-bold text-gray-700">🤫 비밀 유지 약속</p>
-            <p class="text-gray-400">"비밀로 해줘", "약속해" 등</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 bg-blue-50 rounded-xl p-3">
-          <span class="font-black text-blue-500 text-sm min-w-[32px] text-center">15점</span>
-          <div>
-            <p class="font-bold text-gray-700">📏 정중함과 정성</p>
-            <p class="text-gray-400">글자 수로 정성 측정 (150자+ 만점)</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 bg-green-50 rounded-xl p-3 sm:col-span-2">
-          <span class="font-black text-green-500 text-sm min-w-[32px] text-center">10점</span>
-          <div>
-            <p class="font-bold text-gray-700">🙏 사과와 사유</p>
-            <p class="text-gray-400">"미안해", "아쉬워", "이해해줘" 등</p>
-          </div>
-        </div>
+      <div class="gender-btns">
+        <button class="gender-btn btn-male"   onclick="startGame('male')">
+          👦&nbsp; 남자예요
+        </button>
+        <button class="gender-btn btn-female" onclick="startGame('female')">
+          👧&nbsp; 여자예요
+        </button>
       </div>
     </div>
 
-    <!-- 텍스트에어리어 -->
-    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md p-5">
-      <textarea
-        id="msgInput"
-        rows="10"
-        placeholder="여기에 이별 메시지를 작성해보세요.&#10;&#10;예시)&#10;그동안 함께해줘서 정말 고마워. 즐거운 추억이 많았어.&#10;우리 사이에 있었던 일들은 비밀로 해줄게, 약속해.&#10;미안하지만 이제 우리 각자의 길을 가는 게 좋을 것 같아.&#10;앞으로도 건강하게 잘 지내길 바랄게.&#10;&#10;(최소 4문장 이상 작성해야 제출할 수 있어요)"
-        class="w-full border-2 border-gray-200 rounded-xl p-4 text-gray-700 text-base leading-relaxed bg-white/60"
-        oninput="onTextInput()"
-      ></textarea>
+    <!-- ── 우측: 이별 예절 팁 ── -->
+    <div id="gender-right">
+      <div class="tips-header">💌 이별을 잘 하는 방법 — 5가지 팁</div>
 
-      <!-- 실시간 통계 -->
-      <div class="flex items-center justify-between mt-3 flex-wrap gap-2">
-        <div class="flex items-center gap-4 text-sm">
-          <div class="flex items-center gap-1.5">
-            <div id="dot-sentence" class="w-2.5 h-2.5 rounded-full bg-gray-300 transition-colors duration-300"></div>
-            <span id="label-sentence" class="text-gray-400 transition-colors duration-300">0 문장</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <div id="dot-char" class="w-2.5 h-2.5 rounded-full bg-gray-300 transition-colors duration-300"></div>
-            <span id="label-char" class="text-gray-400 transition-colors duration-300">공백 제외 0자</span>
-          </div>
+      <div class="tip-card">
+        <div class="tip-num">1</div>
+        <div class="tip-body">
+          <div class="tip-title">인사와 감사를 먼저</div>
+          <div class="tip-desc">함께한 시간에 고마움을 전하면 서로 상처 없이 마무리할 수 있어요.</div>
         </div>
-        <div id="profanity-warn" class="hidden items-center gap-1.5 text-red-500 text-sm font-bold shake">
-          <span>🚫</span> 욕설 감지됨!
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-num">2</div>
+        <div class="tip-body">
+          <div class="tip-title">상대방을 탓하지 않기</div>
+          <div class="tip-desc">"너 때문에"는 절대 금물! 내 입장과 마음을 중심으로 표현해요.</div>
+        </div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-num">3</div>
+        <div class="tip-body">
+          <div class="tip-title">비밀은 끝까지 지키기</div>
+          <div class="tip-desc">사귀는 동안 알게 된 비밀은 헤어진 후에도 절대 퍼뜨리지 않아요.</div>
+        </div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-num">4</div>
+        <div class="tip-body">
+          <div class="tip-title">진심을 담아 충분히</div>
+          <div class="tip-desc">짧은 한 마디보다 진지하게 고민한 메시지가 상대를 존중하는 태도예요.</div>
+        </div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-num">5</div>
+        <div class="tip-body">
+          <div class="tip-title">이유를 솔직하게 전달</div>
+          <div class="tip-desc">왜 이별을 원하는지 구체적이고 상처 없는 말로 설명하는 연습을 해요.</div>
         </div>
       </div>
     </div>
-
-    <!-- 제출 버튼 -->
-    <button
-      id="submitBtn"
-      onclick="submitMessage()"
-      disabled
-      class="btn-primary w-full py-5 rounded-2xl font-black text-xl text-white bg-gradient-to-r from-gray-300 to-gray-400 shadow"
-    >
-      채점하기 💊
-    </button>
-    <p id="submit-hint" class="text-center text-gray-400 text-sm">
-      4문장 이상 작성하면 제출할 수 있어요.
-    </p>
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN 3 : GAME  (대화 + 입력)
+══════════════════════════════════════════════════════════ -->
+<div id="screen-game" class="screen">
+  <div class="bg-layer" id="game-bg"
+       style="background-image:url('/bg/bg_game.jpg'); background-color:#1a1030;"></div>
+  <div class="vignette"></div>
 
-<!-- ══════════════════════════════════════════════
-     SCREEN 3 · 결과
-══════════════════════════════════════════════ -->
-<div id="screen-result" class="hidden min-h-screen p-4 py-8">
-  <div class="max-w-2xl mx-auto space-y-5">
+  <!-- 캐릭터 -->
+  <div id="char-wrap">
+    <img id="char-img" src="" alt="캐릭터"
+         onerror="this.style.opacity='0.15'; this.style.filter='none'">
+  </div>
 
-    <!-- 상단 내비 -->
-    <div class="flex items-center gap-3">
-      <button
-        onclick="resetToWrite()"
-        class="text-gray-400 hover:text-gray-600 text-sm transition-colors"
-      >← 다시 작성</button>
-      <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-        <div class="bg-gradient-to-r from-pink-500 to-violet-500 h-full rounded-full w-full"></div>
-      </div>
-      <span class="text-xs text-gray-400 font-semibold">3 / 3 단계</span>
+  <!-- 대화창 -->
+  <div id="dialog-box" onclick="advanceDialogue()">
+    <div class="name-tag" id="dialog-name">??</div>
+    <div id="dialog-text"></div>
+    <div class="click-hint">▼ 클릭하여 계속</div>
+  </div>
+
+  <!-- 입력창 -->
+  <div id="input-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.8em;flex-wrap:wrap;">
+      <div class="name-tag" id="input-name">??</div>
+      <span id="sentence-count">0 / 4문장</span>
     </div>
-
-    <!-- 욕설 경고 배너 (조건부 표시) -->
-    <div
-      id="profanity-banner"
-      class="hidden bg-red-50 border-2 border-red-300 rounded-2xl p-4 text-center bounce-in"
-    >
-      <p class="text-red-700 font-black text-lg">🚫 욕설 감지 — 전체 0점 처리</p>
-      <p class="text-red-500 text-sm mt-1">서로를 존중하는 언어를 사용해주세요.</p>
+    <textarea id="msg-input"
+      placeholder="진심을 담아 이별 메시지를 작성해보세요. (최소 4문장 이상)"
+      oninput="checkInput()"></textarea>
+    <div class="input-footer">
+      <span style="color:rgba(255,255,255,0.3);font-size:clamp(10px,1.1vw,13px);">
+        ※ 욕설 사용 시 즉시 0점 처리됩니다
+      </span>
+      <button id="submit-btn" onclick="submitMessage()">제출하기 ✉️</button>
     </div>
-
-    <!-- 점수 원 + 등급 -->
-    <div class="flex flex-col items-center gap-4">
-      <div class="relative w-52 h-52">
-        <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
-          <defs>
-            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stop-color="#ec4899"/>
-              <stop offset="100%" stop-color="#8b5cf6"/>
-            </linearGradient>
-          </defs>
-          <circle cx="60" cy="60" r="54" fill="none" stroke="#f3f4f6" stroke-width="12"/>
-          <circle
-            id="scoreRing"
-            cx="60" cy="60" r="54"
-            fill="none"
-            stroke="url(#ringGrad)"
-            stroke-width="12"
-            stroke-linecap="round"
-            class="score-ring"
-          />
-        </svg>
-        <div class="absolute inset-0 flex flex-col items-center justify-center">
-          <span id="scoreNum" class="text-5xl font-black text-gray-800 tabular-nums">0</span>
-          <span class="text-gray-400 text-xs">점 / 100점</span>
-        </div>
-      </div>
-
-      <!-- 등급 뱃지 -->
-      <div id="gradeBadge" class="bounce-in rounded-2xl shadow-lg px-10 py-4 text-center bg-white border-2 border-gray-200">
-        <div id="gradeEmoji"  class="text-5xl mb-1">🏆</div>
-        <div id="gradeLevel"  class="font-black text-2xl text-gray-800">-</div>
-        <div id="gradeRange"  class="text-gray-400 text-sm mt-0.5">-</div>
-      </div>
-    </div>
-
-    <!-- 영역별 점수 -->
-    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md p-5">
-      <h3 class="font-bold text-gray-800 text-base mb-5 flex items-center gap-2">
-        <span>📊</span> 영역별 점수
-      </h3>
-      <div class="space-y-5">
-
-        <!-- 인사와 고마움 -->
-        <div id="row-gratitude" class="slide-up opacity-0">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-sm font-bold text-gray-700">💬 인사와 고마움</span>
-            <span id="score-gratitude" class="text-pink-600 font-black text-sm">0 / 25점</span>
-          </div>
-          <div class="bg-gray-100 rounded-full h-3 overflow-hidden">
-            <div id="bar-gratitude" class="prog-bar h-full rounded-full bg-pink-400"></div>
-          </div>
-          <p id="fb-gratitude" class="text-xs text-gray-500 mt-1"></p>
-        </div>
-
-        <!-- 비난 금지 -->
-        <div id="row-noBlaming" class="slide-up opacity-0">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-sm font-bold text-gray-700">🚫 비난 금지</span>
-            <span id="score-noBlaming" class="text-purple-600 font-black text-sm">0 / 25점</span>
-          </div>
-          <div class="bg-gray-100 rounded-full h-3 overflow-hidden">
-            <div id="bar-noBlaming" class="prog-bar h-full rounded-full bg-purple-400"></div>
-          </div>
-          <p id="fb-noBlaming" class="text-xs text-gray-500 mt-1"></p>
-        </div>
-
-        <!-- 비밀 유지 약속 -->
-        <div id="row-privacy" class="slide-up opacity-0">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-sm font-bold text-gray-700">🤫 비밀 유지 약속</span>
-            <span id="score-privacy" class="text-indigo-600 font-black text-sm">0 / 25점</span>
-          </div>
-          <div class="bg-gray-100 rounded-full h-3 overflow-hidden">
-            <div id="bar-privacy" class="prog-bar h-full rounded-full bg-indigo-400"></div>
-          </div>
-          <p id="fb-privacy" class="text-xs text-gray-500 mt-1"></p>
-        </div>
-
-        <!-- 정중함과 정성 -->
-        <div id="row-sincerity" class="slide-up opacity-0">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-sm font-bold text-gray-700">📏 정중함과 정성</span>
-            <span id="score-sincerity" class="text-blue-600 font-black text-sm">0 / 15점</span>
-          </div>
-          <div class="bg-gray-100 rounded-full h-3 overflow-hidden">
-            <div id="bar-sincerity" class="prog-bar h-full rounded-full bg-blue-400"></div>
-          </div>
-          <p id="fb-sincerity" class="text-xs text-gray-500 mt-1"></p>
-        </div>
-
-        <!-- 사과와 사유 -->
-        <div id="row-apology" class="slide-up opacity-0">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-sm font-bold text-gray-700">🙏 사과와 사유</span>
-            <span id="score-apology" class="text-green-600 font-black text-sm">0 / 10점</span>
-          </div>
-          <div class="bg-gray-100 rounded-full h-3 overflow-hidden">
-            <div id="bar-apology" class="prog-bar h-full rounded-full bg-green-400"></div>
-          </div>
-          <p id="fb-apology" class="text-xs text-gray-500 mt-1"></p>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- 처방전 -->
-    <div class="rx-card rounded-2xl p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="bg-amber-100 rounded-xl p-2.5">
-          <span class="text-3xl">👩‍⚕️</span>
-        </div>
-        <div>
-          <p class="font-black text-gray-800 text-base">보건쌤의 처방전</p>
-          <p class="text-amber-500 text-xs font-semibold tracking-wide">Prescription from Health Teacher</p>
-        </div>
-      </div>
-      <div class="border-t-2 border-dashed border-amber-200 pt-4">
-        <p id="prescriptionText" class="text-gray-700 leading-relaxed font-medium text-sm">
-          처방 내용이 여기에 표시됩니다.
-        </p>
-      </div>
-      <div class="mt-4 flex items-center justify-between text-xs text-amber-500">
-        <span>처방일: <span id="prescriptionDate"></span></span>
-        <span class="font-black">보건쌤 서명 ✍️</span>
-      </div>
-    </div>
-
-    <!-- 액션 버튼 -->
-    <div class="grid grid-cols-2 gap-3">
-      <button
-        onclick="resetToWrite()"
-        class="btn-primary bg-white border-2 border-pink-300 text-pink-600 font-bold py-4 rounded-2xl hover:bg-pink-50"
-      >
-        다시 도전 🔄
-      </button>
-      <button
-        onclick="showScreen('intro')"
-        class="btn-primary bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold py-4 rounded-2xl shadow"
-      >
-        처음으로 🏠
-      </button>
-    </div>
-
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN 4 : RESULT
+══════════════════════════════════════════════════════════ -->
+<div id="screen-result" class="screen">
+  <div class="bg-layer"
+       style="background-image:url('/bg/bg_game.jpg'); background-color:#1a1030;"></div>
+  <div class="vignette"></div>
 
-<!-- ══════════════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════════════ -->
+  <!-- 캐릭터 -->
+  <div id="result-char-wrap">
+    <img id="result-char-img" src="" alt="캐릭터 반응">
+  </div>
+
+  <!-- 1단계: 캐릭터 대사 (게임 dialog-box 동일 스타일) -->
+  <div id="result-dialog-box" onclick="showResultPanel()">
+    <div class="name-tag" id="result-char-name">??</div>
+    <div id="result-dialog-text"></div>
+    <div class="click-hint">▼ 클릭하여 결과 보기</div>
+  </div>
+
+  <!-- 2단계: 점수·피드백 패널 (클릭 후 표시) -->
+  <div id="result-panel">
+    <div id="score-row">
+      <div id="result-score">0</div>
+      <div>
+        <div id="result-grade"></div>
+        <div id="result-grade-msg"></div>
+      </div>
+    </div>
+
+    <div id="feedback-list"></div>
+
+    <div class="tips-box-result">
+      <div class="tips-title">📋 보건쌤의 이별 예절 5원칙</div>
+      <ol class="tips-list">
+        <li><strong>인사</strong> — 함께한 시간에 감사를 전하며 따뜻하게 마무리해요.</li>
+        <li><strong>비난 금지</strong> — 상대방을 탓하는 말은 평생 상처로 남아요.</li>
+        <li><strong>비밀 유지</strong> — 이별 후에도 서로의 비밀은 반드시 지켜줘요.</li>
+        <li><strong>정성</strong> — 진지하게 고민한 메시지가 상대를 존중하는 태도예요.</li>
+        <li><strong>사유</strong> — 이유를 솔직하고 상처 없이 전달하는 연습을 해요.</li>
+      </ol>
+    </div>
+
+    <button class="retry-btn" onclick="resetGame()">↩&nbsp;다시 해보기</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SCRIPT
+══════════════════════════════════════════════════════════ -->
 <script>
-/* ── 클라이언트 욕설 목록 (실시간 경고용) ── */
-const CLIENT_PROFANITY = [
-  '씨발','시발','씨바','시바','씨팔','시팔',
-  '개새끼','미친새끼','병신새끼',
-  '병신','지랄','닥쳐','꺼져','뒤져','죽어',
-  '개같','빡대가리',
-  'ㅅㅂ','ㅂㅅ','ㅈㄹ','ㅁㅊ','ㄷㅊ','ㄲㅈ',
-  '존나','ㅈㄴ','졸라'
-];
+// ── 게임 상태 ──
+let gender     = null;
+let charKey    = null;
+let charName   = null;
+let dialogStep = 0;
+let isTyping   = false;
+let typingTimer = null;
 
-/* ── 화면 전환 ── */
-function showScreen(name) {
-  ['intro','write','result'].forEach(n => {
-    document.getElementById('screen-' + n).classList.add('hidden');
-  });
-  document.getElementById('screen-' + name).classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+// ── 캐릭터 데이터 ──
+const CHARS = {
+  yeongja: {
+    name: '영자',
+    imgs: { normal:'/chars/영자_normal.png', goodending:'/chars/영자_goodending.png', sad:'/chars/영자_sad.png', angry:'/chars/영자_angry.png' }
+  },
+  cheolsu: {
+    name: '철수',
+    imgs: { normal:'/chars/철수_normal.png', goodending:'/chars/철수_goodending.png', sad:'/chars/철수_sad.png', angry:'/chars/철수_angry.png' }
+  }
+};
+
+// ── 대화 스크립트 ──
+const DIALOGUES = {
+  yeongja: [
+    '있잖아... 오늘 나한테 할 말 있는 거 맞지? 왠지 알 것 같아.',
+    '우리 벌써 2년이야. 그동안 많은 일이 있었는데... 요즘 뭔가 달라진 거 느꼈어.',
+    '솔직하게 말해줘. 어떤 말이든 제대로 들을게.'
+  ],
+  cheolsu: [
+    '나 알아... 오늘 분위기 왜 이런지. 괜히 모른 척하기 싫어서.',
+    '2년 동안 함께였는데, 그게 쉽게 끝날 수 있는 건지 나도 모르겠어.',
+    '그래도 네 입으로 직접 말해줬으면 해. 솔직하게.'
+  ]
+};
+
+// ── 서버 응답 없을 때 폴백 대사 ──
+function getLocalCharResponse(score) {
+  if (score >= 90) return '고마워... 네 진심이 느껴져. 우리 좋은 기억으로 남을 수 있겠다. 잘 지내.';
+  if (score >= 60) return '말해줘서 고맙긴 한데... 마음이 너무 아파. 조금 더 진심을 담아줬으면 좋았을 텐데.';
+  if (score >  0) return '어떻게 나한테 이럴 수 있어? 장난해? 최소한의 예의는 지켜줘!';
+  return '...할 말이 없어. 그 말이 얼마나 상처가 됐는지 알아?';
 }
 
-/* ── 문장 수 계산 ── */
+// ─────────────────────────────────────────────────
+// 화면 전환
+// ─────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active', 'screen-enter'));
+  const next = document.getElementById(id);
+  next.classList.add('active', 'screen-enter');
+}
+
+// ─────────────────────────────────────────────────
+// 스플래시 → 성별 선택
+// ─────────────────────────────────────────────────
+function goToGender() {
+  showScreen('screen-gender');
+}
+
+// ─────────────────────────────────────────────────
+// 유틸
+// ─────────────────────────────────────────────────
+function setCharImg(el, key, mood) {
+  el.src = CHARS[key].imgs[mood];
+  el.style.opacity = '1';
+  el.style.visibility = 'visible';
+}
+
+function typeText(el, text, speed, onDone) {
+  if (typingTimer) clearTimeout(typingTimer);
+  isTyping = true;
+  el.innerHTML = '';
+  let i = 0;
+  const cur = document.createElement('span');
+  cur.className = 'typing-cur';
+  el.appendChild(cur);
+  function tick() {
+    if (i < text.length) {
+      cur.insertAdjacentText('beforebegin', text[i++]);
+      typingTimer = setTimeout(tick, speed);
+    } else {
+      cur.remove();
+      isTyping = false;
+      if (onDone) onDone();
+    }
+  }
+  tick();
+}
+
+function skipTyping(el, text) {
+  if (typingTimer) clearTimeout(typingTimer);
+  el.textContent = text;
+  isTyping = false;
+}
+
 function countSentences(text) {
   return text.split(/[.!?~♡♥\n]+/).filter(s => s.trim().length >= 4).length;
 }
 
-/* ── 공백 제외 글자 수 ── */
-function countChars(text) {
-  return text.replace(/\s/g, '').length;
+// ─────────────────────────────────────────────────
+// 게임 시작
+// ─────────────────────────────────────────────────
+function startGame(sel) {
+  gender   = sel;
+  charKey  = sel === 'male' ? 'yeongja' : 'cheolsu';
+  charName = CHARS[charKey].name;
+  dialogStep = 0;
+
+  setCharImg(document.getElementById('char-img'), charKey, 'normal');
+  document.getElementById('dialog-name').textContent = charName;
+  document.getElementById('input-name').textContent  = charName;
+
+  showScreen('screen-game');
+  runDialogue();
 }
 
-/* ── 실시간 텍스트 분석 ── */
-function onTextInput() {
-  const text = document.getElementById('msgInput').value;
-  const sentences = countSentences(text);
-  const chars = countChars(text);
-  const hasProfanity = CLIENT_PROFANITY.some(w => text.includes(w));
+// ─────────────────────────────────────────────────
+// 대화 진행
+// ─────────────────────────────────────────────────
+function runDialogue() {
+  document.getElementById('dialog-box').style.display = 'flex';
+  document.getElementById('input-box').style.display  = 'none';
+  requestAnimationFrame(snapCharToPanel);
 
-  // 문장 카운터
-  const dotS = document.getElementById('dot-sentence');
-  const lblS = document.getElementById('label-sentence');
-  lblS.textContent = `${sentences}문장`;
-  if (sentences >= 4) {
-    dotS.className = 'w-2.5 h-2.5 rounded-full bg-green-400 transition-colors duration-300';
-    lblS.className = 'text-green-600 font-semibold transition-colors duration-300';
+  const lines = DIALOGUES[charKey];
+  if (dialogStep < lines.length) {
+    typeText(document.getElementById('dialog-text'), lines[dialogStep], 38);
   } else {
-    dotS.className = 'w-2.5 h-2.5 rounded-full bg-orange-400 transition-colors duration-300';
-    lblS.className = 'text-orange-500 transition-colors duration-300';
-  }
-
-  // 글자 수 카운터
-  const dotC = document.getElementById('dot-char');
-  const lblC = document.getElementById('label-char');
-  lblC.textContent = `공백 제외 ${chars}자`;
-  if (chars >= 150) {
-    dotC.className = 'w-2.5 h-2.5 rounded-full bg-green-400 transition-colors duration-300';
-    lblC.className = 'text-green-600 font-semibold transition-colors duration-300';
-  } else if (chars >= 60) {
-    dotC.className = 'w-2.5 h-2.5 rounded-full bg-blue-400 transition-colors duration-300';
-    lblC.className = 'text-blue-500 transition-colors duration-300';
-  } else {
-    dotC.className = 'w-2.5 h-2.5 rounded-full bg-gray-300 transition-colors duration-300';
-    lblC.className = 'text-gray-400 transition-colors duration-300';
-  }
-
-  // 욕설 경고
-  const pw = document.getElementById('profanity-warn');
-  if (hasProfanity) {
-    pw.classList.remove('hidden');
-    pw.classList.add('flex');
-  } else {
-    pw.classList.add('hidden');
-    pw.classList.remove('flex');
-  }
-
-  // 제출 버튼 상태
-  const btn  = document.getElementById('submitBtn');
-  const hint = document.getElementById('submit-hint');
-
-  if (hasProfanity) {
-    btn.disabled = true;
-    btn.className = 'btn-primary w-full py-5 rounded-2xl font-black text-xl text-white bg-gradient-to-r from-red-300 to-red-400 shadow';
-    hint.textContent = '🚫 욕설을 제거해야 제출할 수 있어요!';
-    hint.className = 'text-center text-red-500 text-sm font-semibold';
-  } else if (sentences >= 4) {
-    btn.disabled = false;
-    btn.className = 'btn-primary w-full py-5 rounded-2xl font-black text-xl text-white bg-gradient-to-r from-pink-500 to-violet-500 shadow-lg';
-    hint.textContent = '✅ 준비됐어요! 채점하기를 눌러보세요.';
-    hint.className = 'text-center text-green-500 text-sm font-semibold';
-  } else {
-    btn.disabled = true;
-    btn.className = 'btn-primary w-full py-5 rounded-2xl font-black text-xl text-white bg-gradient-to-r from-gray-300 to-gray-400 shadow';
-    hint.textContent = `4문장 이상 작성하면 제출할 수 있어요. (현재 ${sentences}문장)`;
-    hint.className = 'text-center text-gray-400 text-sm';
+    openInput();
   }
 }
 
-/* ── 제출 ── */
+function advanceDialogue() {
+  const lines = DIALOGUES[charKey];
+  if (isTyping) {
+    skipTyping(document.getElementById('dialog-text'), lines[dialogStep]);
+    return;
+  }
+  dialogStep++;
+  if (dialogStep >= lines.length) openInput();
+  else runDialogue();
+}
+
+// ─────────────────────────────────────────────────
+// 입력창 열기
+// ─────────────────────────────────────────────────
+function openInput() {
+  document.getElementById('dialog-box').style.display = 'none';
+  document.getElementById('input-box').style.display  = 'flex';
+  requestAnimationFrame(snapCharToPanel);
+
+  const ta  = document.getElementById('msg-input');
+  const cnt = document.getElementById('sentence-count');
+  const btn = document.getElementById('submit-btn');
+  ta.value  = '';
+  cnt.textContent = '0 / 4문장';
+  cnt.classList.remove('ready');
+  btn.classList.remove('enabled');
+  btn.disabled  = false;
+  btn.innerHTML = '제출하기 ✉️';
+
+  setTimeout(() => ta.focus(), 80);
+}
+
+// ─────────────────────────────────────────────────
+// 입력 검증
+// ─────────────────────────────────────────────────
+function checkInput() {
+  const text  = document.getElementById('msg-input').value;
+  const count = countSentences(text);
+  const cnt   = document.getElementById('sentence-count');
+  const btn   = document.getElementById('submit-btn');
+
+  cnt.textContent = `${count} / 4문장`;
+  if (count >= 4) { cnt.classList.add('ready');    btn.classList.add('enabled'); }
+  else            { cnt.classList.remove('ready'); btn.classList.remove('enabled'); }
+}
+
+// ─────────────────────────────────────────────────
+// 제출 & 채점
+// ─────────────────────────────────────────────────
 async function submitMessage() {
-  const text = document.getElementById('msgInput').value.trim();
+  const text = document.getElementById('msg-input').value.trim();
   if (!text) return;
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = '분석 중... 🔍';
+  const btn = document.getElementById('submit-btn');
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="spinner"></span>&nbsp;채점 중...';
 
   try {
     const res  = await fetch('/api/analyze', {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ text })
+      body: JSON.stringify({ text })
     });
     const data = await res.json();
 
     if (!res.ok) {
       alert(data.error || '오류가 발생했습니다.');
-      btn.disabled = false;
-      btn.textContent = '채점하기 💊';
+      btn.disabled  = false;
+      btn.innerHTML = '제출하기 ✉️';
       return;
     }
-
-    showResults(data);
-    showScreen('result');
-
+    renderResult(data);
   } catch (e) {
-    alert('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
-    btn.disabled = false;
-    btn.textContent = '채점하기 💊';
+    alert('서버 연결 오류입니다. 잠시 후 다시 시도해주세요.');
+    btn.disabled  = false;
+    btn.innerHTML = '제출하기 ✉️';
   }
 }
 
-/* ── 결과 표시 ── */
-function showResults(data) {
-  const { hasProfanity, total, scores, details, grade } = data;
+// ─────────────────────────────────────────────────
+// 결과 렌더링 — 1단계: 캐릭터 대사 표시
+// ─────────────────────────────────────────────────
+let _resultData = null;
 
-  /* 욕설 배너 */
-  const banner = document.getElementById('profanity-banner');
-  hasProfanity ? banner.classList.remove('hidden') : banner.classList.add('hidden');
+function renderResult(data) {
+  _resultData = data;
+  const { total } = data;
+  const mood        = total >= 90 ? 'goodending' : total >= 60 ? 'sad' : 'angry';
+  const charMessage = data.charMessage || getLocalCharResponse(total);
 
-  /* 점수 원 애니메이션 */
-  const ring = document.getElementById('scoreRing');
-  const numEl = document.getElementById('scoreNum');
-  const circumference = 339.29;
-  const targetOffset = circumference - (total / 100) * circumference;
+  // 캐릭터 이미지
+  const rci = document.getElementById('result-char-img');
+  setCharImg(rci, charKey, mood);
+  if (mood === 'angry') rci.classList.add('shake');
+  else rci.classList.remove('shake');
 
-  // 초기화
-  ring.style.transition = 'none';
-  ring.style.strokeDashoffset = circumference;
-  numEl.textContent = '0';
+  // 이름표
+  document.getElementById('result-char-name').textContent = charName;
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      ring.style.transition = 'stroke-dashoffset 2.2s cubic-bezier(0.22, 1, 0.36, 1)';
-      ring.style.strokeDashoffset = targetOffset;
-    });
-  });
+  // 대화창에 타이핑
+  const dialogText = document.getElementById('result-dialog-text');
+  dialogText.textContent = '';
+  typeText(dialogText, `"${charMessage}"`, 35);
 
-  // 숫자 카운트 업
-  let current = 0;
-  const step = total / 80;
-  const timer = setInterval(() => {
-    current = Math.min(current + step, total);
-    numEl.textContent = Math.round(current);
-    if (current >= total) clearInterval(timer);
-  }, 25);
+  // 패널 숨기고 대화창 표시
+  document.getElementById('result-panel').classList.remove('visible');
+  document.getElementById('result-dialog-box').style.display = 'flex';
 
-  /* 등급 뱃지 */
-  const badge = document.getElementById('gradeBadge');
-  document.getElementById('gradeEmoji').textContent = grade.emoji;
-  document.getElementById('gradeLevel').textContent = grade.level;
-  document.getElementById('gradeRange').textContent = grade.range;
+  showScreen('screen-result');
+  requestAnimationFrame(snapResultChar);
+}
 
-  const gradeStyles = {
-    amber: 'bounce-in rounded-2xl shadow-lg px-10 py-4 text-center bg-gradient-to-br from-amber-50 to-yellow-100 border-2 border-amber-300',
-    blue:  'bounce-in rounded-2xl shadow-lg px-10 py-4 text-center bg-gradient-to-br from-blue-50  to-sky-100   border-2 border-blue-300',
-    green: 'bounce-in rounded-2xl shadow-lg px-10 py-4 text-center bg-gradient-to-br from-green-50 to-emerald-100 border-2 border-green-300',
-    red:   'bounce-in rounded-2xl shadow-lg px-10 py-4 text-center bg-gradient-to-br from-red-50   to-rose-100  border-2 border-red-300'
-  };
-  const levelColors = {
-    amber: 'font-black text-2xl text-amber-700',
-    blue:  'font-black text-2xl text-blue-700',
-    green: 'font-black text-2xl text-green-700',
-    red:   'font-black text-2xl text-red-700'
-  };
-  badge.className = gradeStyles[grade.color] || gradeStyles.red;
-  document.getElementById('gradeLevel').className = levelColors[grade.color] || levelColors.red;
+// ─────────────────────────────────────────────────
+// 결과 렌더링 — 2단계: 점수·피드백 패널
+// ─────────────────────────────────────────────────
+function showResultPanel() {
+  if (!_resultData) return;
+  const { total, details, grade } = _resultData;
 
-  /* 영역별 점수 */
-  const categories = [
-    { key: 'gratitude',  max: 25 },
-    { key: 'noBlaming',  max: 25 },
-    { key: 'privacy',    max: 25 },
-    { key: 'sincerity',  max: 15 },
-    { key: 'apology',    max: 10 }
+  const COLORS = { amber:'#FFD700', blue:'#60a5fa', green:'#4ade80', red:'#f87171' };
+  const gc = COLORS[grade.color] || '#fff';
+
+  const scoreEl = document.getElementById('result-score');
+  scoreEl.textContent = total;
+  scoreEl.style.color = gc;
+  scoreEl.style.textShadow = `0 0 30px ${gc}55`;
+
+  document.getElementById('result-grade').textContent     = `${grade.emoji} ${grade.level}`;
+  document.getElementById('result-grade').style.color     = gc;
+  document.getElementById('result-grade-msg').textContent = grade.message;
+
+  const ITEMS = [
+    { key:'gratitude', label:'인사와 고마움', max:25 },
+    { key:'noBlaming', label:'비난 금지',     max:25 },
+    { key:'privacy',   label:'비밀 유지',     max:25 },
+    { key:'sincerity', label:'정성',          max:15 },
+    { key:'apology',   label:'사과와 사유',   max:10 },
   ];
 
-  categories.forEach(({ key, max }, i) => {
-    const row = document.getElementById('row-' + key);
-    const scoreEl = document.getElementById('score-' + key);
-    const barEl   = document.getElementById('bar-' + key);
-    const fbEl    = document.getElementById('fb-' + key);
-    const detail  = details[key];
-
-    scoreEl.textContent = `${detail.score} / ${max}점`;
-    fbEl.textContent    = detail.feedback;
-
-    // 슬라이드 인
-    row.style.opacity = '0';
-    row.style.animationDelay = (i * 0.15 + 0.3) + 's';
-    row.classList.add('slide-up');
-    row.style.opacity = '';
-
-    // 프로그레스 바
-    const pct = (detail.score / max) * 100;
-    barEl.style.width = '0%';
-    setTimeout(() => {
-      barEl.style.width = pct + '%';
-    }, 900 + i * 150);
+  const list = document.getElementById('feedback-list');
+  list.innerHTML = '';
+  ITEMS.forEach(({ key, label, max }) => {
+    const d = details[key];
+    if (!d) return;
+    const color = d.score > 0 ? '#4ade80' : '#f87171';
+    const div = document.createElement('div');
+    div.className = 'feedback-item fade-in';
+    div.style.borderColor = color;
+    div.innerHTML = `
+      <div class="fi-header">
+        <span class="fi-label" style="color:${color}">${label}</span>
+        <span class="fi-score" style="color:${color}">${d.score} / ${d.max}</span>
+      </div>
+      <div class="fi-text">${d.feedback}</div>`;
+    list.appendChild(div);
   });
 
-  /* 처방전 */
-  document.getElementById('prescriptionText').textContent = grade.message;
-  const d = new Date();
-  document.getElementById('prescriptionDate').textContent =
-    `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+  // 대화창 숨기고 패널 슬라이드업
+  document.getElementById('result-dialog-box').style.display = 'none';
+  const panel = document.getElementById('result-panel');
+  panel.scrollTop = 0;
+  panel.classList.add('visible');
+  requestAnimationFrame(snapResultChar);
 }
 
-/* ── 다시 도전 ── */
-function resetToWrite() {
-  document.getElementById('msgInput').value = '';
-  onTextInput();
-  showScreen('write');
+// ─────────────────────────────────────────────────
+// 결과 화면 캐릭터 위치 — 활성 패널 바로 위에 붙이기
+// ─────────────────────────────────────────────────
+function snapResultChar() {
+  const charWrap  = document.getElementById('result-char-wrap');
+  const dialogBox = document.getElementById('result-dialog-box');
+  const panel     = document.getElementById('result-panel');
+  const active =
+    (dialogBox && dialogBox.style.display !== 'none') ? dialogBox :
+    (panel     && panel.classList.contains('visible')) ? panel     : null;
+  if (active && charWrap) {
+    charWrap.style.bottom = active.getBoundingClientRect().height + 'px';
+  }
 }
 
-/* ── 초기화 ── */
-showScreen('intro');
+// ─────────────────────────────────────────────────
+// 리셋
+// ─────────────────────────────────────────────────
+function resetGame() {
+  gender = charKey = charName = null;
+  dialogStep = 0;
+  isTyping   = false;
+  _resultData = null;
+  if (typingTimer) { clearTimeout(typingTimer); typingTimer = null; }
+  showScreen('screen-splash');
+}
+
+// ─────────────────────────────────────────────────
+// 캐릭터를 활성 패널 바로 위에 붙이기
+// ─────────────────────────────────────────────────
+function snapCharToPanel() {
+  const dialogBox = document.getElementById('dialog-box');
+  const inputBox  = document.getElementById('input-box');
+  const charWrap  = document.getElementById('char-wrap');
+
+  const activePanel =
+    dialogBox.style.display === 'flex' ? dialogBox :
+    inputBox.style.display  === 'flex' ? inputBox  : null;
+
+  if (activePanel) {
+    const h = activePanel.getBoundingClientRect().height;
+    charWrap.style.bottom = h + 'px';
+  }
+}
+
+// 창 크기 바뀔 때 게임 화면 캐릭터 재계산
+window.addEventListener('resize', snapCharToPanel);
+
+// ─────────────────────────────────────────────────
+// 키보드 (스페이스·엔터 → 대화 진행)
+// ─────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const active = document.querySelector('.screen.active');
+  if (!active) return;
+  if (active.id === 'screen-splash') { goToGender(); return; }
+  if (active.id === 'screen-game') {
+    const inputMode = document.getElementById('input-box').style.display === 'flex';
+    if (!inputMode && (e.code === 'Space' || e.code === 'Enter')) {
+      e.preventDefault();
+      advanceDialogue();
+    }
+  }
+});
 </script>
 </body>
 </html>
