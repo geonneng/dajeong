@@ -299,6 +299,13 @@
       transition: opacity 0.35s ease, filter 0.35s ease;
       display: block;
     }
+    /* 모바일 세로 화면에서 캐릭터 크게 */
+    @media (orientation: portrait) and (max-width: 768px) {
+      #char-img {
+        height: clamp(380px, 88vh, 820px);
+        max-width: 100vw;
+      }
+    }
     #char-img.shake { animation: shake 0.5s ease; }
     @keyframes shake {
       0%,100%{transform:translateX(0)}
@@ -460,6 +467,13 @@
       filter: drop-shadow(0 8px 28px rgba(0,0,0,0.6));
       display: block;
     }
+    /* 모바일 세로 화면에서 결과 화면 캐릭터 크게 */
+    @media (orientation: portrait) and (max-width: 768px) {
+      #result-char-img {
+        height: clamp(320px, 78vh, 820px);
+        max-width: 100vw;
+      }
+    }
 
     /* ─── 1단계: 캐릭터 대화창 (게임 dialog-box와 동일 스타일) ─── */
     #result-dialog-box {
@@ -607,6 +621,22 @@
       to   { transform:translateY(0);    opacity:1; }
     }
     .slide-up { animation: slideUp 0.4s cubic-bezier(.25,.8,.25,1) forwards; }
+
+    /* ─── 전체화면: CSS 역회전 폴백 (screen.orientation.lock 미지원 브라우저용) ─── */
+    /* 전체화면 진입 후 기기가 landscape로 돌아갔을 때 portrait으로 역회전 */
+    html.fs-counter-rotate {
+      position: fixed !important;
+      width: 100vh !important;
+      height: 100vw !important;
+      left: calc((100vw - 100vh) / 2) !important;
+      top: calc((100vh - 100vw) / 2) !important;
+      transform: rotate(-90deg) !important;
+      transform-origin: center center !important;
+      overflow: hidden !important;
+    }
+    html.fs-counter-rotate.fs-rotate-cw {
+      transform: rotate(90deg) !important;
+    }
 
     /* ─── 전체화면 버튼 ─── */
     #fullscreen-btn {
@@ -1004,6 +1034,8 @@ function openInput() {
   document.getElementById('dialog-box').style.display = 'none';
   document.getElementById('input-box').style.display  = 'flex';
   requestAnimationFrame(snapCharToPanel);
+  // 입력창 전환 시 키보드 보정값 재적용
+  _adjustForKeyboard();
 
   const ta  = document.getElementById('msg-input');
   const cnt = document.getElementById('sentence-count');
@@ -1205,38 +1237,82 @@ window.addEventListener('resize', snapCharToPanel);
 // ─────────────────────────────────────────────────
 let _fsOrientationType = null;
 
+function _getCurrentOrientation() {
+  if (screen.orientation) return screen.orientation.type;
+  return window.innerWidth < window.innerHeight ? 'portrait-primary' : 'landscape-primary';
+}
+
+function _applyCounterRotation() {
+  if (!document.fullscreenElement || !_fsOrientationType) return;
+  const wantPortrait = _fsOrientationType.startsWith('portrait');
+  const nowPortrait  = window.innerWidth <= window.innerHeight;
+  if (wantPortrait && !nowPortrait) {
+    // landscape-secondary는 반대 방향 회전(시계방향), 나머지는 반시계방향
+    const cw = _getCurrentOrientation() === 'landscape-secondary';
+    document.documentElement.classList.toggle('fs-rotate-cw', cw);
+    document.documentElement.classList.add('fs-counter-rotate');
+  } else {
+    document.documentElement.classList.remove('fs-counter-rotate', 'fs-rotate-cw');
+  }
+}
+
+function _clearFsState() {
+  if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+  document.documentElement.classList.remove('fs-counter-rotate', 'fs-rotate-cw');
+  _fsOrientationType = null;
+}
+
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
-    // 전체화면 진입 직전 현재 방향을 저장 (fullscreenchange 핸들러에서 사용)
-    _fsOrientationType = screen.orientation ? screen.orientation.type : null;
+    _fsOrientationType = _getCurrentOrientation();
     document.documentElement.requestFullscreen().catch(() => {});
   } else {
-    if (screen.orientation && screen.orientation.unlock) {
-      screen.orientation.unlock();
-    }
+    _clearFsState();
     document.exitFullscreen().catch(() => {});
   }
 }
 
 document.addEventListener('fullscreenchange', () => {
   const isFs = !!document.fullscreenElement;
-  document.getElementById('fs-icon-enter').style.display = isFs ? 'none'  : '';
-  document.getElementById('fs-icon-exit').style.display  = isFs ? ''      : 'none';
+  document.getElementById('fs-icon-enter').style.display = isFs ? 'none' : '';
+  document.getElementById('fs-icon-exit').style.display  = isFs ? ''     : 'none';
 
   if (isFs) {
-    // 전체화면 전환이 완료된 시점에 방향 고정
     if (_fsOrientationType && screen.orientation && screen.orientation.lock) {
       const lockType = _fsOrientationType.startsWith('portrait') ? 'portrait' : 'landscape';
-      screen.orientation.lock(lockType).catch(() => {});
+      // lock 성공 시 → 방향 유지됨. 실패 시 → CSS 역회전 폴백 적용
+      screen.orientation.lock(lockType).catch(() => _applyCounterRotation());
+    } else {
+      _applyCounterRotation();
     }
   } else {
-    // 전체화면 해제 시 (뒤로가기·ESC 포함) 방향 잠금 해제
-    if (screen.orientation && screen.orientation.unlock) {
-      screen.orientation.unlock();
-    }
-    _fsOrientationType = null;
+    _clearFsState();
   }
 });
+
+// 전체화면 중 기기가 돌아가면 역회전 재적용
+window.addEventListener('resize', () => {
+  if (document.fullscreenElement) _applyCounterRotation();
+});
+
+// ─── 소프트 키보드 가림 방지 (전체화면 모드) ───────────────────────────────
+// 전체화면에서는 키보드가 올라와도 layout viewport가 줄지 않아 input-box가 가려짐.
+// visualViewport API로 키보드 높이를 계산해 하단 위치를 보정.
+function _adjustForKeyboard() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  // 키보드 높이 = 레이아웃 뷰포트 - (비주얼 뷰포트 offsetTop + 높이)
+  const keyboardH = Math.max(0, window.innerHeight - vv.offsetTop - vv.height);
+  const inputBox  = document.getElementById('input-box');
+  const dialogBox = document.getElementById('dialog-box');
+  if (inputBox)  inputBox.style.bottom  = keyboardH + 'px';
+  if (dialogBox) dialogBox.style.bottom = keyboardH + 'px';
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', _adjustForKeyboard);
+  window.visualViewport.addEventListener('scroll', _adjustForKeyboard);
+}
 
 // 키보드 (스페이스·엔터 → 대화 진행)
 // ─────────────────────────────────────────────────
