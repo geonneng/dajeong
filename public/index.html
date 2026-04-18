@@ -1205,8 +1205,30 @@ window.addEventListener('resize', snapCharToPanel);
 // ─────────────────────────────────────────────────
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(() => {});
+    // 전체화면 진입 전 현재 방향을 기억
+    const currentOrientation = screen.orientation ? screen.orientation.type : null;
+
+    document.documentElement.requestFullscreen().catch(() => {}).then(() => {
+      // 전체화면 진입 후 현재 방향 그대로 고정
+      if (screen.orientation && screen.orientation.lock) {
+        let lockType = currentOrientation;
+        // portrait-primary / portrait-secondary → portrait
+        // landscape-primary / landscape-secondary → landscape
+        if (lockType && lockType.startsWith('portrait')) {
+          lockType = 'portrait';
+        } else if (lockType && lockType.startsWith('landscape')) {
+          lockType = 'landscape';
+        }
+        if (lockType) {
+          screen.orientation.lock(lockType).catch(() => {});
+        }
+      }
+    });
   } else {
+    // 전체화면 해제 시 방향 잠금 해제
+    if (screen.orientation && screen.orientation.unlock) {
+      screen.orientation.unlock();
+    }
     document.exitFullscreen().catch(() => {});
   }
 }
@@ -1215,6 +1237,10 @@ document.addEventListener('fullscreenchange', () => {
   const isFs = !!document.fullscreenElement;
   document.getElementById('fs-icon-enter').style.display = isFs ? 'none'  : '';
   document.getElementById('fs-icon-exit').style.display  = isFs ? ''      : 'none';
+  // 전체화면이 외부(뒤로가기 등)로 해제될 때도 방향 잠금 해제
+  if (!isFs && screen.orientation && screen.orientation.unlock) {
+    screen.orientation.unlock();
+  }
 });
 
 // 키보드 (스페이스·엔터 → 대화 진행)
